@@ -1,18 +1,24 @@
 package secret
 
 import (
+	"crypto/cipher"
+	"errors"
+	"io"
 	"path/filepath"
 	"testing"
 
 	"github.com/mitchellh/go-homedir"
-	"github.com/stretchr/testify/assert"
 )
 
-//no key and right path
+func myEncryptWriter(key string, w io.Writer) (*cipher.StreamWriter, error) {
+	return nil, errors.New("test generated encryptwriter error")
+}
+
+//no key and no path
 func TestLoad(t *testing.T) {
 	var v Vault
 	v.encodingKey = ""
-	v.filepath = "/home/gslab/goworkspace/src/gophercises/secret/cmd/secrets"
+	v.filepath = "/home/gslab/goworkspace/src/gophercises/"
 	v.load()
 }
 
@@ -44,33 +50,31 @@ func TestSavePositive(t *testing.T) {
 func TestGetWitfile(t *testing.T) {
 	var v Vault
 	v.encodingKey = "asa"
-	v.filepath = "/home/gslab/goworkspace/src/gophercises/secret/cmd/secrets"
+	v.filepath = "/home/gslab/goworkspace/src/gophercises/gopheraccount.txt"
 	File(v.encodingKey, v.filepath)
 	v.Get(v.encodingKey)
 }
 
 //key value random but empty file to encrypt
 func TestSetFail(t *testing.T) {
-	v := File("key", "/home/gslab/goworkspace/src/gophercises/secret/s/")
+	v := File("key", "/home/gslab/goworkspace/src/gophercises/gopheraccount.txt")
 	key, value := "k1", "v1"
+	FakeEncryptwriter = myEncryptWriter
 	err := v.Set(key, value)
 	if err == nil {
 		t.Error("expecting error not getting error")
 	}
 }
 
+//first set some value then get some value
 func TestLoadRun(t *testing.T) {
-
 	t.Run("for load to create error", func(t *testing.T) {
 		v := File("", "/home/gslab/.secrets")
-
-		err1 := v.Set("demoTest", "GetTest")
-		_, err2 := v.Get("demoTest")
-
-		if err1 != nil {
-			t.Error("set not set")
+		err := v.Set("demo11", "aaa111")
+		v.Get("demo11")
+		//this test is affected by above mocking func
+		if err == nil {
+			t.Error("expecting error not getting error")
 		}
-
-		assert.Equal(t, nil, err2)
 	})
 }

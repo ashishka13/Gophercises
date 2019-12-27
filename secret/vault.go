@@ -12,6 +12,7 @@ import (
 
 //FakeSet is a mocking variable
 var FakeSet = File
+var FakeEncryptwriter = cipher.EncryptWriter
 
 type Vault struct {
 	encodingKey string
@@ -52,7 +53,7 @@ func (v *Vault) save() error {
 		return err
 	}
 	defer f.Close()
-	w, err := cipher.EncryptWriter(v.encodingKey, f)
+	w, err := FakeEncryptwriter(v.encodingKey, f)
 	if err != nil {
 		return err
 	}

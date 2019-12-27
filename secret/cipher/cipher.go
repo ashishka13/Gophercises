@@ -11,6 +11,7 @@ import (
 )
 
 var FakeCipherBlock = NewCipherBlock
+var FakeReadfull = io.ReadFull
 
 func encryptStream(key string, iv []byte) (cipher.Stream, error) {
 	block, err := FakeCipherBlock(key)
@@ -24,7 +25,7 @@ func encryptStream(key string, iv []byte) (cipher.Stream, error) {
 // the original writer.
 func EncryptWriter(key string, w io.Writer) (*cipher.StreamWriter, error) {
 	iv := make([]byte, aes.BlockSize)
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+	if _, err := FakeReadfull(rand.Reader, iv); err != nil {
 		return nil, err
 	}
 	stream, err := encryptStream(key, iv)

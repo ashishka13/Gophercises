@@ -3,6 +3,7 @@ package cipher
 import (
 	"crypto/cipher"
 	"errors"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -17,6 +18,10 @@ type ciphertStruct struct {
 
 func (m *ciphertStruct) MyCipherBlock(key string) (cipher.Block, error) {
 	return nil, m.err
+}
+
+func myReadFull(r io.Reader, buf []byte) (n int, err error) {
+	return 0, errors.New("testing generated error")
 }
 
 func generateTempfile() string {
@@ -39,33 +44,35 @@ func generateTempfile() string {
 
 //test with real file
 func TestDecryptReader(t *testing.T) {
-	f, _ := os.Open("/home/gslab/goworkspace/src/gophercises/gopheraccount.txt")
+	f, _ := os.Open("/home/gslab/goworkspace/src/gophercises/secret/secret")
 
 	DecryptReader("er", f)
 }
 
-//test with fake file
+//test with fake file and random key
 func TestDecryptReaderErr(t *testing.T) {
 	f, _ := os.Open(generateTempfile())
 
 	DecryptReader("r56r76t87y", f)
 }
 
+//empty key and empty text file
 func TestEncryptWriter(t *testing.T) {
-	f, _ := os.OpenFile("/home/gslab/goworkspace/src/gophercises/gopheraccount.txt", os.O_RDWR, 0755)
+	f, _ := os.OpenFile("/home/gslab/goworkspace/src/gophercises/secret/secret", os.O_RDWR, 0000)
 	EncryptWriter("", f)
 }
 
+//no file provided to encryptwriter
 func TestEncryptWriterErr(t *testing.T) {
-	f, _ := os.OpenFile("", os.O_RDWR, 0000)
-
+	f, _ := os.Open("")
 	EncryptWriter("", f)
 }
 
+//cipherblock mocking
 func TestNewCipherBlock(t *testing.T) {
 	f := &ciphertStruct{err: errors.New("User defined error cipher")}
 	FakeCipherBlock = f.MyCipherBlock
-	fl, _ := os.OpenFile("/home/gslab/goworkspace/src/gophercises/gopheraccount.txt", os.O_RDWR, 0755)
+	fl, _ := os.OpenFile("/home/gslab/goworkspace/src/gophercises/secret/secret", os.O_RDWR, 0755)
 
 	_, err := EncryptWriter("asgyua", fl)
 	assert.NotEqual(t, err, nil)
@@ -73,7 +80,7 @@ func TestNewCipherBlock(t *testing.T) {
 
 //mock the decryptstream function read the mock flow carefully
 func TestDecryptReaderMock(t *testing.T) {
-	f3, _ := os.Open("/home/gslab/goworkspace/src/gophercises/gopheraccount.txt")
+	f3, _ := os.Open("/home/gslab/goworkspace/src/gophercises/secret/secret")
 	DecryptReader("", f3)
 
 	f := &ciphertStruct{err: errors.New("User defined error cipher")}
@@ -86,7 +93,15 @@ func TestDecryptReaderMock(t *testing.T) {
 		t.Error("expecting error not getting error")
 	}
 }
+
+//random byte stream of size 16
 func TestEncrypt(t *testing.T) {
 	iv := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
 	decryptStream("", iv)
+}
+
+func TestMockIOReader(t *testing.T) {
+	f, _ := os.Open("")
+	FakeReadfull = myReadFull
+	EncryptWriter("", f)
 }

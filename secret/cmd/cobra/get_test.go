@@ -6,13 +6,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//TestGetErr is used to check whether
-// invalid key is giving error or not
+//invalid key provided
 func TestGetErr(t *testing.T) {
 	var cmd *cobra.Command
 	getCmd.Run(cmd, []string{"this kay is not present"})
 }
 
+//positive test
 func TestGet(t *testing.T) {
 	var cmd *cobra.Command
 	getCmd.Run(cmd, []string{"demo"})
