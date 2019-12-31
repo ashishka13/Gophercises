@@ -55,8 +55,7 @@ func RenderNumShapeChoices(w http.ResponseWriter, r *http.Request, rs io.ReadSee
 	}
 	err = tpl.Execute(w, data)
 	if err != nil {
-		http.Error(w, "no", 404)
-		// panic(err)
+		http.Error(w, "no", 404) //insted of panic(err)
 	}
 }
 
@@ -95,8 +94,7 @@ func RenderModeChoices(w http.ResponseWriter, r *http.Request, rs io.ReadSeeker,
 	}
 	err = tpl.Execute(w, data)
 	if err != nil {
-		http.Error(w, "no", 404)
-		// panic(err)
+		http.Error(w, "no", 404) //insted of panic(err)
 	}
 }
 

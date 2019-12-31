@@ -14,7 +14,7 @@ var doCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) { //cmd is of cobra command type
 		fmt.Println("do called")
 		var ids []int              //ids array is generated to accept all the do numbers from user
-		for _, arg := range args { //terate over them
+		for _, arg := range args { //iterate over them
 			id, err := strconv.Atoi(arg) //equivalent to ParseInt(s, 10, 0), converted to type int.
 			//strconv converts strings into basic datatypes
 			if err != nil {
