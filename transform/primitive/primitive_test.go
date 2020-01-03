@@ -34,33 +34,45 @@ func mytempfile(prefix, ext string) (*os.File, error) {
 // 	assert.Equal(t, 200, response.Code, "StatusOk found")
 // }
 
-//wrong directory
-func TestTempfileErr(t *testing.T) {
+//wrong directory gives error
+func TestTempfile(t *testing.T) {
 	directory := "/home/gslab/src/gophcsvrm/pre.go"
-	tempfile(directory, "")
+	_, err := tempfile(directory, "")
+	if err == nil {
+		t.Error(err)
+	}
 }
 
-//negative test case
+//negative test case gives error
 func TestTransform1(t *testing.T) {
 	var mode1 Mode
 	mode1 = 7
 	testFil, _ := os.Open("/home/gslab/goworkspace/src/gophercises/transform/img/fakemonalisa.png")
-	Transform(testFil, "png", 2, myWithMode(mode1))
+	_, err := Transform(testFil, "png", 2, myWithMode(mode1))
+	if err != nil {
+		t.Error(err)
+	}
 }
 
-//positive test with no model
+//positive test with no model gives error
 func TestTransform(t *testing.T) {
 	var mode1 Mode
 	testFil, _ := os.Open("/home/gslab/goworkspace/src/gophercises/transform/img/fakemonalisa.png")
 	Fakecopy2 = myCopy
-	Transform(testFil, "png", 2, myWithMode(mode1))
+	_, err := Transform(testFil, "png", 2, myWithMode(mode1))
+	if err == nil {
+		t.Error(err)
+	}
 }
 
-//wrong-> mode, image, extension, num of shapes, mode options
+//wrong-> mode, image, extension, num of shapes, mode options gives error
 func TestTransformErr(t *testing.T) {
 	var mode1 Mode
 	r := strings.NewReader("")
-	Transform(r, "", 0, myWithMode(mode1))
+	_, err := Transform(r, "", 0, myWithMode(mode1))
+	if err == nil {
+		t.Error(err)
+	}
 }
 
 // //mock io copy
@@ -68,19 +80,30 @@ func TestTransform3(t *testing.T) {
 	var mode1 Mode
 	r := strings.NewReader("/home/gslab/goworkspace/src/gophercises/transform/img")
 	Fakecopy1 = myCopy
-	Transform(r, "", 0, myWithMode(mode1))
+	_, err := Transform(r, "", 0, myWithMode(mode1))
+	if err == nil {
+		t.Error(err)
+	}
 }
 
+//temporary file mock
 func TestTransform4(t *testing.T) {
 	var mode1 Mode
 	r := strings.NewReader("/home/gslab/goworkspace/src/gophercises/transform/img")
 	Faketempfile2 = mytempfile
-	Transform(r, "", 0, myWithMode(mode1))
+	_, err := Transform(r, "", 0, myWithMode(mode1))
+	if err == nil {
+		t.Error(err)
+	}
 }
 
+//temporary file mock
 func TestTransform2(t *testing.T) {
 	var mode1 Mode
 	r := strings.NewReader("/home/gslab/goworkspace/src/gophercises/transform/img")
 	Faketempfile1 = mytempfile
-	Transform(r, "", 0, myWithMode(mode1))
+	_, err := Transform(r, "", 0, myWithMode(mode1))
+	if err == nil {
+		t.Error(err)
+	}
 }

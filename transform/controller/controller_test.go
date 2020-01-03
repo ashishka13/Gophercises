@@ -40,7 +40,6 @@ func TestHomepage(t *testing.T) {
 
 //negative
 func TestTempfileErr(t *testing.T) {
-
 	tempfile("/fakeDirectoryName/", "")
 }
 
@@ -187,6 +186,8 @@ func TestMockTransform(t *testing.T) {
 	response := httptest.NewRecorder()
 	Mymux.ServeHTTP(response, request)
 }
+
+//gen images mocked
 func TestMockGenImages(t *testing.T) {
 	FakegenImages = MygenImages
 
