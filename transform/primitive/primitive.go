@@ -32,14 +32,6 @@ const (
 	ModePolygon
 )
 
-// WithMode is an option for the Transform function that will define the
-// mode you want to use. By default, ModeTriangle will be used.
-func WithMode(mode Mode) func() []string {
-	return func() []string {
-		return []string{"-m", fmt.Sprintf("%d", mode)}
-	}
-}
-
 // Transform will take the provided image and apply a primitive
 // transformation to it, then return a reader to the resulting image.
 func Transform(image io.Reader, ext string, numShapes int, opts ...func() []string) (io.Reader, error) {
@@ -64,11 +56,13 @@ func Transform(image io.Reader, ext string, numShapes int, opts ...func() []stri
 	if err != nil {
 		return nil, errors.New("primitive: failed to copy image into temp input file")
 	}
+
 	// Run primitive w/ -i in.Name() -o out.Name()
 	stdCombo, err := primitive(in.Name(), out.Name(), numShapes, args...)
 	if err != nil {
 		return nil, fmt.Errorf("primitive: failed to run the primitive command. stdcombo=%s", stdCombo)
 	}
+
 	// read out into a reader, return reader, delete out
 	b := bytes.NewBuffer(nil)
 	_, err = Fakecopy2(b, out)
@@ -81,8 +75,8 @@ func Transform(image io.Reader, ext string, numShapes int, opts ...func() []stri
 func primitive(inputFile, outputFile string, numShapes int, args ...string) (string, error) {
 	argStr := fmt.Sprintf("-i %s -o %s -n %d", inputFile, outputFile, numShapes)
 	args = append(strings.Fields(argStr), args...)
-	cmd := exec.Command("primitive", args...)
-	b, err := cmd.CombinedOutput()
+	cmd := exec.Command("primitive", args...) //this is where actual fogleman/primitive package is accessed
+	b, err := cmd.CombinedOutput()            //baeause it is a command line program
 	return string(b), err
 }
 

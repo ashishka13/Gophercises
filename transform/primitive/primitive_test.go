@@ -84,8 +84,3 @@ func TestTransform2(t *testing.T) {
 	Faketempfile1 = mytempfile
 	Transform(r, "", 0, myWithMode(mode1))
 }
-
-func TestWithmode(t *testing.T) {
-	var mode1 Mode
-	WithMode(mode1)
-}

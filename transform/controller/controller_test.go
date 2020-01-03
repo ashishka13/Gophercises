@@ -81,7 +81,7 @@ func TestModify3(t *testing.T) {
 func TestModify5(t *testing.T) {
 
 	request, _ := http.NewRequest("GET", "/modify/fakeowl.png?mode=a&n=df", nil)
-	//numShapes, err := strconv.Atoi(nStr) string sent insted on int
+	//numShapes, err := strconv.Atoi(nStr) string sent insted of int
 	response := httptest.NewRecorder()
 	Mymux.ServeHTTP(response, request)
 }
@@ -90,7 +90,6 @@ func TestModify5(t *testing.T) {
 func TestModify4(t *testing.T) {
 
 	request, _ := http.NewRequest("GET", "/modify/fakeowl.png?mode=2&n=df", nil)
-	//numShapes, err := strconv.Atoi(nStr) string sent insted on int
 	response := httptest.NewRecorder()
 	Mymux.ServeHTTP(response, request)
 }

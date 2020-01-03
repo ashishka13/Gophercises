@@ -19,6 +19,15 @@ var Fakecopy = io.Copy
 var Faketransform = primitive.Transform
 var FakegenImages = genImages
 
+// WithMode is an option for the Transform function that will define the
+// mode you want to use. By default, ModeTriangle will be used.
+func WithMode(mode primitive.Mode) func() []string {
+	return func() []string {
+		fmt.Println("this is withmode ", []string{"-m", fmt.Sprintf("%d", mode)})
+		return []string{"-m", fmt.Sprintf("%d", mode)}
+	}
+}
+
 //RenderNumShapeChoices ...
 func RenderNumShapeChoices(w http.ResponseWriter, r *http.Request, rs io.ReadSeeker, ext string, mode primitive.Mode) {
 	opts := []genOpts{
@@ -32,6 +41,10 @@ func RenderNumShapeChoices(w http.ResponseWriter, r *http.Request, rs io.ReadSee
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	//"/modify/320985324.png?mode=8&n=1"
+	//this will show urls for all the 4 images
+
 	html := `<html><body>
 			{{range .}}
 				<a href="/modify/{{.Name}}?mode={{.Mode}}&n={{.NumShapes}}">
@@ -67,7 +80,7 @@ func RenderModeChoices(w http.ResponseWriter, r *http.Request, rs io.ReadSeeker,
 		{N: 1, M: primitive.ModePolygon},
 		{N: 1, M: primitive.ModeCombo},
 	}
-	imgs, err := FakegenImages(rs, ext, opts...)
+	imgs, err := FakegenImages(rs, ext, opts...) //... means take in all the options inside the "opts" slice
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -92,7 +105,7 @@ func RenderModeChoices(w http.ResponseWriter, r *http.Request, rs io.ReadSeeker,
 			Mode: opts[i].M,
 		})
 	}
-	err = tpl.Execute(w, data)
+	err = tpl.Execute(w, data) //this will execute the HTML code snippet on webpage
 	if err != nil {
 		http.Error(w, "no", 404) //insted of panic(err)
 	}
@@ -106,54 +119,36 @@ type genOpts struct {
 func genImages(rs io.ReadSeeker, ext string, opts ...genOpts) ([]string, error) {
 	var ret []string
 	for _, opt := range opts {
-		rs.Seek(0, 0)
+		rs.Seek(0, 0) //start making changes from 0,0 location from inside the file
 		f, err := genImage(rs, ext, opt.N, opt.M)
+		fmt.Println("this is gen image f ", f)
 		if err != nil {
 			return nil, err
 		}
-		ret = append(ret, f)
+		ret = append(ret, f) //appenf "f" filenames to the array
 	}
 	return ret, nil
 }
 
 func genImage(r io.Reader, ext string, numShapes int, mode primitive.Mode) (string, error) {
-	out, err := Faketransform(r, ext, numShapes, primitive.WithMode(mode))
+	fmt.Println("this is mode struct ", mode)
+	out, err := Faketransform(r, ext, numShapes, WithMode(mode))
+	// fmt.Println("outs name ", out)
 	if err != nil {
 		return "", err
 	}
-	outFile, err := Faketempfile1("", ext)
+	outFile, err := Faketempfile1("", ext) //generate temporary file for local storage
+	// fmt.Println("outfile name immediately ", outFile.Name())
 	if err != nil {
 		return "", err
 	}
 	defer outFile.Close()
-	io.Copy(outFile, out)
+	io.Copy(outFile, out) //copy generated image's io.reader into the empty temp file
+	fmt.Println("outfile name ", outFile.Name())
 	return outFile.Name(), nil
 }
 
-//Upload ...
-func Upload(w http.ResponseWriter, r *http.Request) {
-	file, header, err := r.FormFile("image") //this "image" is form-data key
-	if err != nil {                          //we must use same name "image"
-		http.Error(w, err.Error(), http.StatusBadRequest) //in request form data
-		return
-	}
-	defer file.Close()
-	ext := filepath.Ext(header.Filename)[1:]
-	onDisk, err := Faketempfile2("", ext)
-	if err != nil {
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
-		return
-	}
-	defer onDisk.Close()
-	_, err = Fakecopy(onDisk, file)
-	if err != nil {
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
-		return
-	}
-	http.Redirect(w, r, "/modify/"+filepath.Base(onDisk.Name()), http.StatusFound)
-}
-
-//Homepage -------------------------
+//Homepage ----------------------
 func Homepage(w http.ResponseWriter, r *http.Request) {
 	html := `<html><body>
 		<form action="/upload" method="post" enctype="multipart/form-data">
@@ -164,37 +159,69 @@ func Homepage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, html)
 }
 
+//Upload ...
+func Upload(w http.ResponseWriter, r *http.Request) {
+	file, header, err := r.FormFile("image") //this "image" is form-data key and also written in "input tag name"
+	if err != nil {                          //we must use same name "image"
+		http.Error(w, err.Error(), http.StatusBadRequest) //in request form data
+		return
+	} //file uploaded
+	defer file.Close()
+	ext := filepath.Ext(header.Filename)[1:] //file extension extracted
+	onDisk, err := Faketempfile2("", ext)    //create an empty file with same extension as uploaded image
+	if err != nil {
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+	defer onDisk.Close()
+	_, err = Fakecopy(onDisk, file) //copy the contents of uploaded file into the temp file and keep the original file intact
+	if err != nil {
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/modify/"+filepath.Base(onDisk.Name()), http.StatusFound) //now image processing phase
+	//filepath.base will return the filename.png and will add it to /modify/ url
+}
+
 //Modify ...
 func Modify(w http.ResponseWriter, r *http.Request) {
-	f, err := os.Open("./img/" + filepath.Base(r.URL.Path))
+	f, err := os.Open("./img/" + filepath.Base(r.URL.Path)) //open the image in the URL
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	defer f.Close()
-	ext := filepath.Ext(f.Name())[1:]
-	modeStr := r.FormValue("mode")
+	ext := filepath.Ext(f.Name())[1:] //again extract extension for modified output files
+	modeStr := r.FormValue("mode")    //extract mode from http name tag
+	fmt.Println("mode str is:", modeStr)
 	if modeStr == "" {
 		RenderModeChoices(w, r, f, ext)
 		return
 	}
-	mode, err := strconv.Atoi(modeStr)
+	mode, err := strconv.Atoi(modeStr) //convert "mode" string into integer
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	nStr := r.FormValue("n")
+	nStr := r.FormValue("n") //extract number of shapes to be generated from name tag
+	fmt.Println("n str is: ", nStr)
 	if nStr == "" {
 		RenderNumShapeChoices(w, r, f, ext, primitive.Mode(mode))
 		return
 	}
-	numShapes, err := strconv.Atoi(nStr) //numshapes is used through its
-	if err != nil {                      //struct which is Datastruct
+	numShapes, err := strconv.Atoi(nStr) //convert "numberOfShapes" string into integer
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	_ = numShapes //this numshapes is used nowhere
+	_ = numShapes //this numshapes is used nowhere after here
 	http.Redirect(w, r, "/img/"+filepath.Base(f.Name()), http.StatusFound)
+
+	/*	mode str is:
+		mode str is: 4
+		n str is:
+		mode str is: 4
+		n str is:  1*/
 }
 
 func tempfile(prefix, ext string) (*os.File, error) {
@@ -202,6 +229,7 @@ func tempfile(prefix, ext string) (*os.File, error) {
 	if err != nil {
 		return nil, errors.New("main: failed to create temporary file")
 	}
-	defer os.Remove(in.Name())
+	fmt.Println("tempfile name: ", in.Name())
+	defer os.Remove(in.Name()) //delete the temp file after new image generation. these filrs are without extension
 	return os.Create(fmt.Sprintf("%s.%s", in.Name(), ext))
 }

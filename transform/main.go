@@ -22,7 +22,7 @@ func main() {
 	mux.Handle("/img/", http.StripPrefix("/img", fs))
 
 	//mux.HandleFunc("/modify/{someParameter}", controller.Modify)
-	//this is optional url because this is main and not testing
+	//this is optional url because this is main and not testing environment
 	//because image name and modes will append inside the {} upon calling
 	//but in main this append is handled in the corrosponding func
 
