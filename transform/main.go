@@ -7,12 +7,6 @@ import (
 )
 
 func main() {
-	// go func() {
-	// 	t := time.NewTicker(1 * time.Minute)
-	// 	for {
-	// 		<-t.C
-	// 	}
-	// }()
 	fs := http.FileServer(http.Dir("./img/"))
 
 	mux := http.NewServeMux()
@@ -26,5 +20,5 @@ func main() {
 	//because image name and modes will append inside the {} upon calling
 	//but in main this append is handled in the corrosponding func
 
-	log.Fatal(http.ListenAndServe(":3000", mux))
+	log.Fatal(http.ListenAndServe(":4321", mux))
 }

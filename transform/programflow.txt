@@ -1,5 +1,0 @@
-add -> CreateTask() -> db.pdate() 
-
-do -> alltasks() -> find desired task from the task array -> deletetask(with key) -> db.update()
-
-lit -> allTasks() -> print the task array

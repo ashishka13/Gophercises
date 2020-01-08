@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -47,6 +48,7 @@ func Transform(image io.Reader, ext string, numShapes int, opts ...func() []stri
 	defer os.Remove(in.Name())
 	out, err := Faketempfile2("in_", ext)
 	if err != nil {
+		log.Println(err)
 		return nil, errors.New("primitive: failed to create temporary output file")
 	}
 	defer os.Remove(out.Name())
@@ -54,12 +56,14 @@ func Transform(image io.Reader, ext string, numShapes int, opts ...func() []stri
 	// Read image into in file
 	_, err = Fakecopy1(in, image)
 	if err != nil {
+		log.Println(err)
 		return nil, errors.New("primitive: failed to copy image into temp input file")
 	}
 
 	// Run primitive w/ -i in.Name() -o out.Name()
 	stdCombo, err := primitive(in.Name(), out.Name(), numShapes, args...)
 	if err != nil {
+		log.Println(err)
 		return nil, fmt.Errorf("primitive: failed to run the primitive command. stdcombo=%s", stdCombo)
 	}
 
@@ -67,6 +71,7 @@ func Transform(image io.Reader, ext string, numShapes int, opts ...func() []stri
 	b := bytes.NewBuffer(nil)
 	_, err = Fakecopy2(b, out)
 	if err != nil {
+		log.Println(err)
 		return nil, errors.New("primitive: Failed to copy output file into byte buffer")
 	}
 	return b, nil
@@ -83,6 +88,7 @@ func primitive(inputFile, outputFile string, numShapes int, args ...string) (str
 func tempfile(prefix, ext string) (*os.File, error) {
 	in, err := ioutil.TempFile("", prefix)
 	if err != nil {
+		log.Println(err)
 		return nil, errors.New("primitive: failed to create temporary file")
 	}
 	defer os.Remove(in.Name())
